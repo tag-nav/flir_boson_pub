@@ -1,0 +1,9 @@
+<launch>
+    <param name="" value="" />
+
+    <!-- Main node -->
+    <node name="flir_boson_pub_node" pkg="flir_boson_pub" type="flir_boson_pub_node">
+        <param name="" type="string" value=""/>
+        <param name="" type="string" value=""/>
+    </node>
+</launch>
