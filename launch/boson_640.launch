@@ -1,9 +1,11 @@
 <launch>
-    <param name="" value="" />
+    <!-- Argument definitions -->
+    <arg name="dtype" default="1" /> <!-- either 0 (agc8) or 1 (raw16) -->
+    <arg name="port" default="/dev/video0" />
 
     <!-- Main node -->
     <node name="flir_boson_pub_node" pkg="flir_boson_pub" type="flir_boson_pub_node">
-        <param name="" type="string" value=""/>
-        <param name="" type="string" value=""/>
+        <param name="dtype" type="int" value="$(arg dtype)" /> <!-- either 0 (agc8) or 1 (raw16) -->
+        <param name="port" type="string" value="$(arg port)" />
     </node>
 </launch>

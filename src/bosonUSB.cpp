@@ -1,6 +1,11 @@
 #include "bosonUSB.h"
 
-Boson::Boson() {
+
+
+Boson::Boson(const std::string& video_, const int video_mode_) {
+	video = video_;
+	video_mode = video_mode_;
+	
 	// Display Help
 	// print_help();
 
@@ -69,7 +74,7 @@ Boson::Boson() {
 	// printf(WHT ">>> " YEL "%s" WHT " selected\n", thermal_sensor_name);
 
 	// We open the Video Device
-	printf(WHT ">>> " YEL "%s" WHT " selected\n", video);
+	printf(WHT ">>> " YEL "%s" WHT " selected\n", video.c_str());
 	if((fd = open(video.c_str(), O_RDWR)) < 0){
 		perror(RED "Error : OPEN. Invalid Video Device" WHT "\n");
 		exit(1);
@@ -190,21 +195,21 @@ Boson::Boson() {
 	// Declarations for RAW16 representation
     // Will be used in case we are reading RAW16 format
 	// Boson320 , Boson 640
-	thermal16 = cv::Mat(height, width, CV_16U, buffer_start);   // OpenCV input buffer  : Asking for all info: two bytes per pixel (RAW16)  RAW16 mode`
-	thermal16_linear = cv::Mat(height,width, CV_8U, 1);         // OpenCV output buffer : Data used to display the video
+	thermal_raw16 = cv::Mat(height, width, CV_16U, buffer_start);   // OpenCV input buffer  : Asking for all info: two bytes per pixel (RAW16)  RAW16 mode`
+	
+	int luma_height;
+	int luma_width;
+	int color_space;
 
-	// int luma_height;
-	// int luma_width;
-	// int color_space;
-
-	// // Declarations for 8bits YCbCr mode
-    //     // Will be used in case we are reading YUV format
-	// // Boson320, 640 :  4:2:0
-	// luma_height = height+height/2;
-	// luma_width = width;
-	// color_space = CV_8UC1;
- 	// cv::Mat thermal_luma(luma_height, luma_width,  color_space, buffer_start);  // OpenCV input buffer
-	// cv::Mat thermal_rgb(height, width, CV_8UC3, 1);    // OpenCV output buffer , BGR -> Three color spaces (640 - 640 - 640 : p11 p21 p31 .... / p12 p22 p32 ..../ p13 p23 p33 ...)
+	// Declarations for 8bits YCbCr mode
+        // Will be used in case we are reading YUV format
+	// Boson320, 640 :  4:2:0
+	luma_height = height+height/2;
+	luma_width = width;
+	color_space = CV_8UC1;
+ 	thermal_agc8 = cv::Mat(luma_height, luma_width,  color_space, buffer_start);  // OpenCV input buffer
+	
+	thermal_mono8 = cv::Mat(height, width, CV_8U, 1); // OpenCV output buffer : Data used to display the video
 }
 
 
@@ -235,22 +240,33 @@ bool Boson::read_frame(cv::Mat& thermal_img) {
 	// -----------------------------
 	// RAW16 DATA
 	if ( video_mode==RAW16 ) {
-		AGC_Basic_Linear(thermal16, thermal16_linear);
+		thermal_img = thermal_raw16;
+		
+		// Below is just for visualization
+		AGC_Basic_Linear(thermal_raw16, thermal_mono8);
 
-		// Display thermal after 16-bits AGC... will display an image
-		// sprintf(label, "%s : RAW16  Linear", thermal_sensor_name);
-		// cv::imshow(label, thermal16_linear);
-
-		if (thermal16_linear.empty()) {
-			perror(RED "thermal16_linear empty" WHT);
+		if (thermal_mono8.empty()) {
+			perror(RED "thermal_mono8 empty" WHT);
 		}
 
-		// cv::imshow("RAW16  Linear", thermal16_linear);
-		thermal_img = thermal16_linear;
+		cv::imshow("RAW16", thermal_mono8);
+		cv::waitKey(1);
+		
 	}
-	else {
-		perror(RED "8 bits YUV UNSUPORTED YET" WHT);
-		exit(1);
+	// ---------------------------------
+	// DATA in YUV
+	else {	// Video is in 8 bits YUV
+		thermal_img = thermal_agc8;
+		
+		// Below is just for visualization
+		cv::cvtColor(thermal_agc8, thermal_mono8, COLOR_YUV2GRAY_I420, 0 );   // 4:2:0 family instead of 4:2:2 ...
+
+		if (thermal_mono8.empty()) {
+			perror(RED "thermal_mono8 empty" WHT);
+		}
+
+		cv::imshow("AGC-8", thermal_mono8);
+		cv::waitKey(1);		
 	}
 
 	return true;

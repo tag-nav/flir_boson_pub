@@ -72,7 +72,7 @@ enum sensor_types {
 
 class Boson {
 public:
-    Boson();
+	Boson(const std::string& video_, const int video_mode_);
     ~Boson();
 
     bool read_frame(cv::Mat& thermal_img);
@@ -81,19 +81,20 @@ public:
     void print_help();
 
 private:
+	std::string video;
+	int video_mode;
+
     int ret;
 	int fd;
 	int i;
 	struct v4l2_capability cap;
 	// long frame=0;     // First frame number enumeration
-	std::string video = "/dev/video0";   // To store Video Port Device
 	// char label[50];   // To display the information
 	// char thermal_sensor_name[20];  // To store the sensor name
 	// char filename[60];  // PATH/File_count
 	// char folder_name[30];  // To store the folder name
     // char video_frames_str[30];
 	// Default Program options
-	int  video_mode=RAW16;
 	int  video_frames=0;
 	int  zoom_enable=0;
 	int  record_enable=0;
@@ -102,8 +103,9 @@ private:
     int height;
     int width;
 
-    cv::Mat thermal16;
-    cv::Mat thermal16_linear;
+    cv::Mat thermal_raw16;
+    cv::Mat thermal_agc8;
+	cv::Mat thermal_mono8;
 
     struct v4l2_format format;
     struct v4l2_requestbuffers bufrequest;
