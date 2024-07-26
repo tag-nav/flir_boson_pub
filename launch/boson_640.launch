@@ -4,8 +4,13 @@
     <arg name="port" default="/dev/video0" />
 
     <!-- Main node -->
-    <node name="flir_boson_pub_node" pkg="flir_boson_pub" type="flir_boson_pub_node">
-        <param name="dtype" type="int" value="$(arg dtype)" /> <!-- either 0 (agc8) or 1 (raw16) -->
+    <node name="flir_boson_pub_node" pkg="flir_boson_pub" type="flir_boson_pub_node" output="screen">
+        <param name="dtype" type="int" value="$(arg dtype)" /> <!-- either 0 (agc8) or 1 (raw16) -->        
         <param name="port" type="string" value="$(arg port)" />
+        <param name="ACM_port" type="string" value="/dev/ttyACM0" />
+        <param name="EXT_SYNC_MODE" type="int" value="2" /> <!-- "0" for DISABLE_MODE, "2" for SLAVE_MODE -->
+        <param name="FFC_MODE" type="int" value="1" /> <!-- "0" for MANUAL_MODE, "1" for AUTO_MODE (default is AUTO_MODE) -->
+
+      <param name="camera_info_path" type="string" value="$(find flir_boson_pub)/config/boson.yaml" />
     </node>
 </launch>

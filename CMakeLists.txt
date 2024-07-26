@@ -2,13 +2,24 @@ cmake_minimum_required(VERSION 2.8)
 project(flir_boson_pub)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-# add_compile_options(-std=c++11)
+## add_compile_options(-std=c++11)
+
+## Compile as C99 for C files
+## set(CMAKE_C_STANDARD 99)
+
+# Set C++ standard
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Set C standard (if needed, otherwise you can omit this)
+set(CMAKE_C_STANDARD 99)  # or 11, depending on your requirements
+set(CMAKE_C_STANDARD_REQUIRED ON)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 
-
+set(OpenCV_DIR /usr/lib/x86_64-linux-gnu/cmake/opencv4)
 find_package(OpenCV REQUIRED)
 if(NOT OpenCV_FOUND)
   message(FATAL_ERROR "OpenCV not found.")
@@ -23,6 +34,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   sensor_msgs
   std_msgs
+  camera_info_manager
 )
 
 ## System dependencies are found with CMake's conventions
@@ -117,7 +129,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES flir_boson_pub
- CATKIN_DEPENDS cv_bridge image_transport roscpp sensor_msgs std_msgs
+ CATKIN_DEPENDS cv_bridge image_transport roscpp sensor_msgs std_msgs camera_info_manager
 #  DEPENDS system_lib
 )
 
@@ -129,8 +141,12 @@ catkin_package(
 ## Your package locations should be listed before other locations
 include_directories(
 # include
+  ${catkin_INCLUDE_DIRS}
   ${PROJECT_SOURCE_DIR}
   ${PROJECT_SOURCE_DIR}/include
+  ${PROJECT_SOURCE_DIR}/src/ClientFiles_C
+  ${PROJECT_SOURCE_DIR}/src/FSLP_Files/src/inc
+  ${PROJECT_SOURCE_DIR}/src/FSLP_Files/src/linux
 )
 
 ## Declare a C++ library
@@ -138,8 +154,30 @@ add_library(${PROJECT_NAME} SHARED
   src/bosonUSB.cpp
 )
 
+add_library(simple_lib 
+  src/ClientFiles_C/Client_API.c
+  src/ClientFiles_C/Client_Dispatcher.c
+  src/ClientFiles_C/Client_Interface.c
+  src/ClientFiles_C/Client_Packager.c
+  src/ClientFiles_C/dataServiceClient.c
+  src/ClientFiles_C/fifo.c
+  src/ClientFiles_C/Serializer_Struct.c
+  src/ClientFiles_C/Serializer_BuiltIn.c
+  src/ClientFiles_C/UART_Connector.c
+  src/FSLP_Files/src/linux/serialPortAdapter.c
+  src/FSLP_Files/src/linux/serial.c
+  src/FSLP_Files/src/flirChannels.c
+  src/FSLP_Files/src/flirCRC.c
+  src/FSLP_Files/src/FSLP.c
+  src/FSLP_Files/src/timeoutLogic.c
+)
+
+## link_directories(/home/brg/Boson_ws/src/flir_boson_pub/src/FSLP_Files)
+
 target_link_libraries(${PROJECT_NAME}
   ${OpenCV_LIBS}
+##  FSLP_64
+  simple_lib
 )
 
 ## Add cmake target dependencies of the library
@@ -154,6 +192,9 @@ add_executable(${PROJECT_NAME}_node
   src/flir_boson_pub_node.cpp
 )
 
+# Set C++ compile features
+target_compile_features(${PROJECT_NAME}_node PRIVATE cxx_std_11)
+
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -163,6 +204,7 @@ add_executable(${PROJECT_NAME}_node
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}_node

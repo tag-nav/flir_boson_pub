@@ -196,7 +196,7 @@ Boson::Boson(const std::string& video_, const int video_mode_) {
     // Will be used in case we are reading RAW16 format
 	// Boson320 , Boson 640
 	thermal_raw16 = cv::Mat(height, width, CV_16U, buffer_start);   // OpenCV input buffer  : Asking for all info: two bytes per pixel (RAW16)  RAW16 mode`
-	
+
 	int luma_height;
 	int luma_width;
 	int color_space;
@@ -208,7 +208,6 @@ Boson::Boson(const std::string& video_, const int video_mode_) {
 	luma_width = width;
 	color_space = CV_8UC1;
  	thermal_agc8 = cv::Mat(luma_height, luma_width,  color_space, buffer_start);  // OpenCV input buffer
-	
 	thermal_mono8 = cv::Mat(height, width, CV_8U, 1); // OpenCV output buffer : Data used to display the video
 }
 
